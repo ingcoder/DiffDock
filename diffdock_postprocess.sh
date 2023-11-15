@@ -1,11 +1,9 @@
 #!/bin/bash
 # Shell script to run the inference code using Python
 
-
 # Get command-line arguments
 PROTEIN_LIGAND_CSV="$1"
 OUT_DIR="$2"
-
 
 # # Activate conda env
 source /home/ec2-user/miniconda3/bin/activate diffdock
@@ -26,20 +24,20 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR"
 echo $(pwd)
 
-python /home/ec2-user/DiffDock/diffdock_postprocess.py "$PROTEIN_LIGAND_CSV"
+python /home/ec2-user/DiffDock/diffdock_postprocess.py "$PROTEIN_LIGAND_CSV" "$OUT_DIR"
 
-# # Check if the Python script executed successfully
-# if [ $? -eq 0 ]; then
-#     echo "Python script executed successfully, uploading results to S3."
+# Check if the Python script executed successfully
+if [ $? -eq 0 ]; then
+    echo "Python script executed successfully, uploading results to S3."
 
-#     # Modify the below path and bucket/folder as needed
-#     aws s3 cp "$OUT_DIR" s3://diffdock/ --recursive
+    # Modify the below path and bucket/folder as needed
+    aws s3 cp "$PROTEIN_LIGAND_CSV/$OUT_DIR" s3://diffdock/ --recursive
 
-#     if [ $? -eq 0 ]; then
-#         echo "Successfully uploaded results to S3."
-#     else
-#         echo "Failed to upload results to S3."
-#     fi
-# else
-#     echo "Python script execution failed, not uploading to S3."
-# fi
+    if [ $? -eq 0 ]; then
+        echo "Successfully uploaded results to S3."
+    else
+        echo "Failed to upload results to S3."
+    fi
+else
+    echo "Python script execution failed, not uploading to S3."
+fi
