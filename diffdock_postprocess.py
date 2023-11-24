@@ -40,9 +40,11 @@ def process_results_directory(results_directory, results_pdb_file_no_hetatms):
     """Processes each result directory and returns a DataFrame with the results."""
     df_rows = []
     results_dirs = glob(os.path.join(results_directory, "complex*"))
+    print('results_dirs', results_dirs)
 
     for results_dir in tqdm(results_dirs, desc="runs"):
         results_sdfs = [os.path.join(results_dir, f) for f in os.listdir(results_dir) if "confidence" in f and f.endswith(".sdf")]
+        print('results_sdfs', results_sdfs)
 
         for results_sdf in tqdm(results_sdfs[:2], leave=False, desc="files"):
             process_sdf_file(results_sdf, results_pdb_file_no_hetatms, df_rows)
@@ -68,28 +70,49 @@ def get_affinity(pdb_file, sdf_file, score_only=False, local_only=False):
     return float(re.findall("Affinity:\s*([\-\.\d+]+)", stdout)[0])
 
 
-def save_results(df_results, output_directory):
+def save_results(df_results, out_dir, results_dir):
     """Saves the results DataFrame to a TSV file."""
-    tsv_file = os.path.join(output_directory, "df_diffdock_results.tsv")
+    # tsv_file = os.path.join(output_directory, "df_diffdock_results.tsv")
+
+    # Construct the absolute output directory path
+    output_directory = os.path.abspath(os.path.join(results_dir, out_dir))
+
+    # Construct the TSV file path
+    filename = 'df_diffdock_results.tsv'
+    tsv_file = os.path.join(output_directory, filename)
+    print('TSV file:', tsv_file)
+    print('Output directory:', output_directory)
+    print('tsv_file:', tsv_file)
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
     df_results.to_csv(tsv_file, sep='\t', index=None)
     return tsv_file
 
 
-def main(results_directory, output_directory):
+def main(results_directory, output_directory, protein_ligand_csv):
     # Load PDB file path
-    results_pdb_df = pd.read_csv('/home/ec2-user/DiffDock/data/protein_ligand_example_csv.csv')
-    results_pdb_file = os.path.join('/home/ec2-user/DiffDock', results_pdb_df['protein_path'][0])
+    project_dir = os.getcwd()
+    
+    csv_path = os.path.join(project_dir, protein_ligand_csv)
+    protein_ligand_df = pd.read_csv(csv_path)
+    pdb_filepath = os.path.join(project_dir, protein_ligand_df['protein_path'][0])
+    results_directory = os.path.join(project_dir, results_directory)
+
+    print('main function:')
+    print('project_dir', project_dir)
+    print('pdb_filepathh', pdb_filepath)
+    print('csv_path', csv_path)
+    print('output_directory', output_directory)
+    print('=====')
 
     # Remove HETATM records
-    results_pdb_file_no_hetatms = remove_hetatms(results_pdb_file)
+    results_pdb_file_no_hetatms = remove_hetatms(pdb_filepath)
 
     # Process results directory
     df_results = process_results_directory(results_directory, results_pdb_file_no_hetatms)
 
     # Save results
-    tsv_file = save_results(df_results, output_directory)
+    tsv_file = save_results(df_results, output_directory, results_directory)
     print(f"Results saved to {tsv_file}")
 
 
@@ -98,7 +121,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process the results.')
     parser.add_argument('results_dir', type=str, help='Path to the results directory.')
     parser.add_argument('output_dir', type=str, help='Path to the gnina output directory.')
+    parser.add_argument('protein_ligand_csv', type=str, help='Name of protein liagand batch csv.')
     args = parser.parse_args()
-    print('main results directory', args.results_dir)
-    print('output directory', args.output_dir)
-    main(args.results_dir, args.output_dir)
+    print('DiffDock inference results directory:', args.results_dir)
+    print('Gnina results output directory:', args.output_dir)
+    print('Name of protein liagand batch csv:', args.protein_ligand_csv)
+    main(args.results_dir, args.output_dir, args.protein_ligand_csv)
+    
