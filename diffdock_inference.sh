@@ -57,5 +57,5 @@ cd "$SCRIPT_DIR"
 
 # Run the Python script
 log_info "Running Python script for DiffDock Inference..."
-python "$SCRIPT_DIR/inference.py" --protein_ligand_csv "$PROTEIN_LIGAND_CSV" --out_dir "$RESULTS_DIR" --inference_steps "$INFERENCE_STEPS" --samples_per_complex "$SAMPLES_PER_COMPLEX" --batch_size "$BATCH_SIZE" --actual_steps "$ACTUAL_STEPS" --no_final_step_noise
+python "$SCRIPT_DIR/inference.py" --protein_ligand_csv "$PROTEIN_LIGAND_CSV" --out_dir "$RESULTS_DIR" --inference_steps "$INFERENCE_STEPS" --samples_per_complex "$SAMPLES_PER_COMPLEX" --batch_size "$BATCH_SIZE" --actual_steps "$ACTUAL_STEPS" --no_final_step_noise>> "$LOG_FILE" 2>&1 || log_error "Python script execution failed"
 log_info "===== End diffdock_inference.sh ====="

@@ -40,6 +40,7 @@ parser.add_argument('--no_final_step_noise', action='store_true', default=False,
 parser.add_argument('--inference_steps', type=int, default=20, help='Number of denoising steps')
 parser.add_argument('--actual_steps', type=int, default=None, help='Number of denoising steps that are actually performed')
 args = parser.parse_args()
+print(f"inference.py -> --batch_size: {args.batch_size}")
 
 os.makedirs(args.out_dir, exist_ok=True)
 with open(f'{args.model_dir}/model_parameters.yml') as f:

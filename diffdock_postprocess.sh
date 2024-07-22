@@ -21,10 +21,12 @@ log_error() {
 DIFFDOCK_RESULTS_DIR="$1"
 OUT_DIR="$2"
 PROTEIN_LIGAND_CSV="$3"
+FILENAME="$4"
 HOME_DIR="/home/ec2-user"
-LOG_FILE="/var/log/my_log_file.log"
+LOG_FILE="/home/ec2-user/DiffDock/my_log_file.log"
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" # Get the directory where this .sh script is located
 CURRENT_USER=$(whoami)
+S3_BUCKET="$5"
 
 # Print the parameters
 log_info "===== Start diffdock_postprocess.sh ====="
@@ -54,7 +56,7 @@ cd "$SCRIPT_DIR" || log_error "Failed to change directory to $PROJECT_DIR"
 # Run the Python script
 log_info "Running Python script for Gnina Docking"
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" # Get the directory where this .sh script is located
-python "$SCRIPT_DIR/diffdock_postprocess.py" "$DIFFDOCK_RESULTS_DIR" "$OUT_DIR" "$PROTEIN_LIGAND_CSV">> "$LOG_FILE" 2>&1 || log_error "Python script execution failed"
+python "$SCRIPT_DIR/diffdock_postprocess.py" "$DIFFDOCK_RESULTS_DIR" "$OUT_DIR" "$PROTEIN_LIGAND_CSV" "$FILENAME">> "$LOG_FILE" 2>&1 || log_error "Python script execution failed"
 
 
 # Check if the Python script executed successfully
@@ -62,7 +64,7 @@ if [ $? -eq 0 ]; then
     log_info "Python script executed successfully. Start uploading results to S3..."
 
     # Modify the below path and bucket/folder as needed
-    if aws s3 cp "$SCRIPT_DIR/$DIFFDOCK_RESULTS_DIR/$OUT_DIR" s3://diffdock/ --recursive >> "$LOG_FILE" 2>&1; then
+    if aws s3 cp "$SCRIPT_DIR/$DIFFDOCK_RESULTS_DIR" "$S3_BUCKET" --recursive >> "$LOG_FILE" 2>&1; then
         log_info "Successfully uploaded results to S3."
     else
         log_error "Failed to upload results to S3."
